@@ -3,7 +3,7 @@ import string
 
 class Tag:
     def __init__(self, name, color, id=None):
-        self.id = id if id is not None else uuid.uuid4().hex
+        self._id = id if id is not None else uuid.uuid4().hex
         self.name = name
         self.color = color
 
