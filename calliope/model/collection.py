@@ -90,7 +90,18 @@ class Collection:
         new_tag = Tag(tag_name, tag_color)
         self._custom_tags[new_tag.id] = new_tag
         return new_tag
-        
+
+    def add_entry(self, entry):
+        pass
+
+    def query(self, q):
+        pass
+
+    def blockingEntries(self, tag):
+        pass
+
+    def canDeleteTag(self, tag):
+        pass
 
     def remove_entry(self, entry):
         pass
