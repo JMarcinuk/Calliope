@@ -25,6 +25,7 @@ class Entry:
     def title(self):
         return self._title
 
+    # title character limit 50
     @title.setter
     def title(self, new_title):
         if not isinstance(new_title, str):
