@@ -6,6 +6,8 @@ from calliope.model.tag import Tag
 from calliope.model.errors import DuplicateTagNameError
 from calliope.model.errors import TagInUseError
 from calliope.model.errors import DefaultTagError
+from calliope.model.errors import EntryValidationError
+from calliope.model.errors import CharLimitConflictError
 
 class Collection:
     def __init__(self, title, description, default_tags, id=None, char_limit=None, 
@@ -16,7 +18,10 @@ class Collection:
 
         self._id = id if id is not None else uuid.uuid4().hex
 
-        self.char_limit = char_limit
+        # bypasses setter intentionally because entries is referenced in the setter for limit change rules
+        # loads are also not blocked by char_limit rules with this logic
+        self._check_limit_value(char_limit)
+        self._char_limit = char_limit
 
         self.tag_ids = tag_ids if tag_ids is not None else set()
 
@@ -73,18 +78,30 @@ class Collection:
     def char_limit(self):
         return self._char_limit
 
+    # helper method for checking character limit
+    # prevents initial character limit construction from trying to check a non-existent entries dict
     # char limit setter restrictions:
-    # only integers greater than or equal to 1 are allowed
-    # None is also accepted and is interpreted in other code as an unlimited max character count
-    @char_limit.setter
-    def char_limit(self, limit):
+        # only non-boolean integers greater than or equal to 1 are allowed
+        # None is also accepted and is interpreted in other code as an unlimited max character count
+    @staticmethod
+    def _check_limit_value(limit):
         if limit is None:
-            self._char_limit = limit
             return
-        elif not isinstance(limit, int) or isinstance(limit, bool):
-            raise TypeError("Limit passed not an integer")
+        if not isinstance(limit, int) or isinstance(limit, bool):
+            raise TypeError("Requested limit not an integer")
         elif limit < 1:
             raise ValueError("Limit cannot be lower than 1")
+
+    # ensures character limit changes do not fall below the size of any existing entries
+    @char_limit.setter
+    def char_limit(self, limit):
+        self._check_limit_value(limit)
+        if limit is None:
+            self._char_limit = None
+            return
+        conflicts = [entry for entry in self._entries.values() if entry.length() > limit]
+        if conflicts:
+            raise CharLimitConflictError(conflicts)
         self._char_limit = limit
 
     # entries and tags return copies of themselves so that they are not mutable in other classes
@@ -117,7 +134,21 @@ class Collection:
         return new_tag
 
     def add_entry(self, entry):
-        pass
+        if entry.id in self._entries:
+            raise KeyError("Entry already exists")
+        problems = self.validate_entry(entry)
+        if problems:
+            raise EntryValidationError(problems)
+        self._entries[entry.id] = entry
+
+    def update_entry(self, entry):
+        if entry.id not in self._entries:
+            raise KeyError("Unable to locate entry")
+        problems = self.validate_entry(entry)
+        if problems:
+            raise EntryValidationError(problems)
+        self._entries[entry.id] = entry
+        entry.touch() # touching the entry here ensures that the entry is timestamped when updated
 
     def query(self, q):
         pass
@@ -174,5 +205,24 @@ class Collection:
         else:
             raise KeyError(f"Queried Entry with ID {entry_id} does not exist")
 
-    def validate_entry(self, entry):
-        pass
+    def _title_taken(self, title, ignore_id=None):
+        requested = title.strip().casefold()
+        return any(
+            entry.title.strip().casefold() == requested
+            for entry in self._entries.values()
+            if entry.id != ignore_id
+        )
+
+    def validate_entry(self, entry: Entry) -> list[str]:
+        problems = []
+        if not entry.is_valid(self._char_limit):
+            problems.append(f"Entry length of {entry.length()} exceeds character limit of {self._char_limit}.")
+        if not entry.tag_ids:
+            problems.append("An Entry must have at least one Tag.")
+        all_tags = self.available_tags()
+        for tag_id in entry.tag_ids:
+            if tag_id not in all_tags:
+                problems.append(f"This entry uses a tag that doesn't exist or no longer exists.")
+        if self._title_taken(entry.title, ignore_id=entry.id):
+            problems.append(f"An Entry titled {entry.title} already exists.")
+        return problems
