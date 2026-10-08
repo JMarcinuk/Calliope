@@ -9,6 +9,8 @@ from calliope.model.errors import DefaultTagError
 from calliope.model.errors import EntryValidationError
 from calliope.model.errors import CharLimitConflictError
 
+from calliope.model.query import *
+
 class Collection:
     def __init__(self, title, description, default_tags, id=None, char_limit=None, 
                  entries=None, custom_tags=None, tag_ids=None):
@@ -150,8 +152,38 @@ class Collection:
         self._entries[entry.id] = entry
         entry.touch() # touching the entry here ensures that the entry is timestamped when updated
 
-    def query(self, q):
-        pass
+    def query(self, q: EntryQuery):
+        results = list(self._entries.values())
+        if q.keywords:
+            kept = []
+            search_words = q.keywords.casefold().split()
+            for entry in results:
+                entry_text = (entry.title + " " + entry.body).casefold()
+                if all(word in entry_text for word in search_words):
+                    kept.append(entry)
+            results = kept
+
+        if q.tag_ids:
+            kept = []
+            if q.mode == TagMode.ALL:
+                for entry in results:
+                    if q.tag_ids.issubset(entry.tag_ids):
+                        kept.append(entry)
+            elif q.mode == TagMode.ANY:
+                for entry in results:
+                    if not q.tag_ids.isdisjoint(entry.tag_ids):
+                        kept.append(entry)
+            results = kept
+
+        match q.sort:
+            case EntrySort.RECENT:
+                results.sort(key=lambda entry: entry.modified, reverse=not q.flip)
+            case EntrySort.LENGTH:
+                results.sort(key=lambda entry: entry.length(), reverse=not q.flip)
+            case EntrySort.TITLE:
+                results.sort(key=lambda entry: entry.title.casefold(), reverse=q.flip)
+        return results
+
 
     # checks to see if any entries whose only tag's deletion has been requested
     # if it has, it returns a list of those entries, otherwise it returns an empty list
