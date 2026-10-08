@@ -1,4 +1,4 @@
-class DuplicateTagNameError(ValueError):
+class DuplicateContentError(ValueError):
     pass
 
 class TagInUseError(ValueError):

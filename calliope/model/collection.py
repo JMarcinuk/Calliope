@@ -3,7 +3,7 @@ import uuid
 from calliope.model.entry import Entry
 from calliope.model.tag import Tag
 
-from calliope.model.errors import DuplicateTagNameError
+from calliope.model.errors import DuplicateContentError
 from calliope.model.errors import TagInUseError
 from calliope.model.errors import DefaultTagError
 from calliope.model.errors import EntryValidationError
@@ -130,7 +130,7 @@ class Collection:
 
     def add_tag(self, tag_name, tag_color):
         if self._name_taken(tag_name):
-            raise DuplicateTagNameError(f"A tag named '{tag_name}' already exists.")
+            raise DuplicateContentError(f"A tag named '{tag_name}' already exists.")
         new_tag = Tag(tag_name, tag_color)
         self._custom_tags[new_tag.id] = new_tag
         return new_tag
@@ -228,7 +228,7 @@ class Collection:
         if tag_id in self._default_tags:
             raise DefaultTagError("Cannot rename default tag")
         if self._name_taken(new_name, ignore_id=tag_id):
-            raise DuplicateTagNameError(f"A Tag named {new_name} already exists")
+            raise DuplicateContentError(f"A Tag named {new_name} already exists")
         self._custom_tags[tag_id].name = new_name
 
     def get_entry(self, entry_id):
