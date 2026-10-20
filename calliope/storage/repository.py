@@ -25,17 +25,17 @@ class Repository(ABC):
         pass
 
     @abstractmethod
-    def delete_collection(self, collection_id):
+    def delete_collection(self, collection_id: str):
         """removes a collection from the filesystem"""
         pass
 
     @abstractmethod
-    def save_entry(self, collection, entry):
+    def save_entry(self, collection: Collection, entry: Entry):
         """writes an entry to a specific collection and saves changes to the filesystem"""
         pass
 
     @abstractmethod
-    def delete_entry(self, collection, entry_id):
+    def delete_entry(self, collection: Collection, entry_id: str):
         """removes an entry from a collection and saves changes to filesystem"""
         pass
 
@@ -72,3 +72,21 @@ class MarkdownFolderRepository(Repository):
 
         tmp_file.write_text("\n".join(filetext), encoding="utf-8")
         tmp_file.replace(new_entry)
+
+    def load_library(self) -> Library:
+        raise NotImplementedError
+
+    def save_library(self, library: Library):
+        raise NotImplementedError
+
+    def save_collection(self, collection: Collection):
+        raise NotImplementedError
+
+    def delete_collection(self, collection_id: str):
+        raise NotImplementedError
+
+    def save_entry(self, collection: Collection, entry: Entry):
+        raise NotImplementedError
+
+    def delete_entry(self, collection: Collection, entry_id: str):
+        raise NotImplementedError
