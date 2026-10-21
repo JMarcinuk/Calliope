@@ -1,0 +1,12 @@
+[
+    {"id": "default-unsorted", "name": "Unsorted", "color": "#A0AABA"},
+    {"id": "default-in-progress", "name": "In Progress", "color": "#8E7FAD"},
+    {"id": "default-draft", "name": "Draft", "color": "#C2B280"},
+    {"id": "default-archived", "name": "Archived", "color": "#948276"},
+    {"id": "default-idea", "name": "Idea", "color": "#577C9F"},
+    {"id": "default-done", "name": "Done", "color": "#A8883E"},
+    {"id": "default-favorite", "name": "Favorite", "color": "#75A976"},
+    {"id": "default-needs-revision", "name": "Needs Revision", "color": "#975F5E"},
+    {"id": "default-collection-info", "name": "Collection Info", "color": "#7FADA6"}
+]
+
