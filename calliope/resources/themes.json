@@ -1,0 +1,36 @@
+{
+  "default-dark": {
+    "tag": "default-dark",
+    "title": "Default Dark",
+    "background": "#333A47",
+    "surface": "#3C4453",
+    "text": "#ACB4C3",
+    "text-muted": "#8994A9",
+    "border": "#89A17D",
+    "primary-dark": "#3A4733",
+    "primary-light": "#C9D4C4",
+    "secondary-light": "#C3ACB4",
+    "secondary-dark": "#47333A",
+    "paper": "#FFFFFF",
+    "ink": "#000000",
+    "selection": "#576A4D",
+    "error": "#BC5B3B"
+  },
+  "default-light": {
+    "tag": "default-light",
+    "title": "Default Light",
+    "background": "#8994A9",
+    "surface": "#ACB4C3",
+    "text": "#333A47",
+    "text-muted": "#3C4453",
+    "border": "#89A17D",
+    "primary-dark": "#C9D4C4",
+    "primary-light": "#3A4733",
+    "secondary-light": "#47333A",
+    "secondary-dark": "#C3ACB4",
+    "paper": "#FFFFFF",
+    "ink": "#000000",
+    "selection": "#A9BAA0",
+    "error": "#BC5B3B"
+  }
+}
