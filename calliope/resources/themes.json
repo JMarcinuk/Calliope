@@ -1,6 +1,6 @@
 {
   "default-dark": {
-    "tag": "default-dark",
+    "id": "default-dark",
     "title": "Default Dark",
     "background": "#333A47",
     "surface": "#3C4453",
@@ -17,12 +17,12 @@
     "error": "#BC5B3B"
   },
   "default-light": {
-    "tag": "default-light",
+    "id": "default-light",
     "title": "Default Light",
-    "background": "#8994A9",
+    "background": "#A0A9BA",
     "surface": "#ACB4C3",
     "text": "#333A47",
-    "text-muted": "#3C4453",
+    "text-muted": "#454E5F",
     "border": "#89A17D",
     "primary-fore": "#C9D4C4",
     "primary-back": "#3A4733",
