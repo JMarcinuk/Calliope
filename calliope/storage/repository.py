@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 
 from calliope.model.library import Library
 from calliope.model.collection import Collection
+from calliope.model.tag import Tag
 from calliope.model.entry import Entry
 
 class Repository(ABC):
@@ -73,8 +74,83 @@ class MarkdownFolderRepository(Repository):
         tmp_file.write_text("\n".join(filetext), encoding="utf-8")
         tmp_file.replace(new_entry)
 
+    @staticmethod
+    def _tag_to_dict(tag: Tag) -> dict:
+        tag_dict = {
+            "id": tag.id,
+            "name": tag.name,
+            "color": tag.color
+        }
+        return tag_dict
+
+    @staticmethod
+    def _dict_to_tag(data: dict) -> Tag:
+        tag = Tag(id=data["id"], name=data["name"], color=data["color"])
+        return tag
+
+    def _read_collection(self, folder: Path) -> dict | None:
+        if not folder.is_dir():
+            return None
+        collection_metadata = folder / "collection.json"
+        if not collection_metadata.is_file():
+            return None
+        info = json.loads(collection_metadata.read_text(encoding="utf-8"))
+        entries = []
+        entries_dir = folder / "entries"
+        if entries_dir.is_dir():
+            for file in entries_dir.glob("*.md"):
+                try:
+                    entries.append(self._read_entry(file=file))
+                except (json.JSONDecodeError, KeyError, ValueError, IndexError):
+                    continue
+        custom_tags = [self._dict_to_tag(d) for d in info["custom_tags"]]
+        collection_dict = {
+            "title": info["title"],
+            "description": info["description"],
+            "id": info["id"],
+            "char_limit": info["char_limit"],
+            "entries": entries,
+            "custom_tags": custom_tags,
+            "tag_ids": info["tag_ids"]
+        }
+        return collection_dict
+            
+
     def load_library(self) -> Library:
-        raise NotImplementedError
+        tags_json_file = Path(__file__).parent.parent / "resources" / "default_tags.json"
+        tags_list_json = json.loads(tags_json_file.read_text(encoding="utf-8"))
+        default_tags_list = []
+        for tag_dict in tags_list_json:
+            default_tags_list.append(self._dict_to_tag(tag_dict))
+
+        metadata_path = self._root_path / "library.json"
+        if metadata_path.is_file():
+            try: 
+                metafile = metadata_path.read_text(encoding="utf-8")
+                metadata = json.loads(metafile)
+                tags = [self._dict_to_tag(d) for d in metadata["collection_tags"]]
+                library = Library(default_entry_tags=default_tags_list, collection_tags=tags)
+            except (json.JSONDecodeError, KeyError) as err:
+                raise ValueError(f"Library metadata is damaged and could not be loaded: {err}") from err
+        else:
+            library = Library(default_entry_tags=default_tags_list)
+        
+
+        collections_dir = self._root_path / "collections"
+        if not collections_dir.is_dir():
+            return library # this is a first-time load, return an empty library
+        for folder in collections_dir.iterdir():
+            try:
+                collection_dict = self._read_collection(folder)
+            except (json.JSONDecodeError, KeyError):
+                continue
+            if collection_dict is None:
+                continue
+            library.load_collection(**collection_dict)
+            
+        return library
+            
+
 
     def save_library(self, library: Library):
         raise NotImplementedError
